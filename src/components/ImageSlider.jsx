@@ -15,22 +15,28 @@ export default function ImageSlider() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setIndex((prevIndex) => (prevIndex + 1) % images.length);
+      setIndex((prev) => (prev + 1) % images.length);
     }, 4000);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
-      <Image
-        src={images[index]}
-        alt="Traditional Wooden Cold Pressed Oil"
-        fill
-        sizes="100vw"
-        className="object-cover transition-opacity duration-700 ease-in-out"
-        priority={index === 0}
-      />
+    <div className="absolute inset-0 w-full h-full">
+
+      {images.map((img, i) => (
+        <Image
+          key={i}
+          src={img}
+          alt="Traditional Wooden Cold Pressed Oil"
+          fill
+          sizes="100vw"
+          priority={i === 0}
+          className={`object-cover transition-opacity duration-1000
+          ${i === index ? "opacity-100" : "opacity-0"}`}
+        />
+      ))}
+
     </div>
   );
 }

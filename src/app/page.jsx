@@ -25,7 +25,7 @@ export default function Hero() {
     <div className="min-h-screen bg-[#F5E9D3]">
 
       {/* HERO SECTION */}
-      <section className="relative w-full min-h-[85vh] md:min-h-[calc(100vh-96px)] flex items-center overflow-hidden">
+      <section className="relative w-full min-h-[100svh] md:min-h-[calc(100vh-96px)]">
 
         {/* Background Slider */}
         <div className="absolute inset-0">
@@ -36,7 +36,7 @@ export default function Hero() {
         {/* Content */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full">
 
-          <div className="relative max-w-xl bg-white/30 backdrop-blur-sm 
+          <div className="relative max-w-xl bg-black/60 backdrop-blur-sm 
           p-6 sm:p-8 md:p-12 rounded-3xl border-2 md:border-4 border-[#E7C873] shadow-xl">
 
             <h2 className="mb-3 text-white text-sm sm:text-base tracking-widest uppercase font-bold">
