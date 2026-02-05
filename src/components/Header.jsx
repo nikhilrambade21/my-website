@@ -2,11 +2,12 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { ShoppingCart, ChevronDown } from "lucide-react";
+import { ShoppingCart, ChevronDown, Menu, X } from "lucide-react";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [showProducts, setShowProducts] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -59,50 +60,50 @@ export default function Header() {
     { name: "Almond Oil", id: "almond" },
   ];
 
-  /* Navigate product */
   const handleProductClick = (id) => {
     router.push(`/products#${id}`);
     setShowProducts(false);
+    setMobileMenu(false);
   };
 
   return (
     <>
       {/* TOP BAR */}
-      <div className="bg-[#5f1616] text-white text-sm text-center py-2 font-medium">
+      <div className="bg-[#5f1616] text-white text-xs sm:text-sm text-center py-2 font-medium">
         Free Shipping on Orders Above ₹1999
       </div>
 
       {/* HEADER */}
       <header
         className={`fixed left-0 w-full z-50 transition-all duration-500 ${
-          scrolled ? "top-12" : "top-10"
+          scrolled ? "top-10" : "top-8"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4">
           <div
             className={`flex items-center justify-between transition-all duration-500
             ${
               scrolled
-                ? "bg-white/95 backdrop-blur-md rounded-2xl shadow-xl px-10 py-2.5 mx-4"
-                : "bg-white px-10 py-4"
+                ? "bg-white/95 backdrop-blur-md rounded-xl shadow-xl px-4 sm:px-10 py-2"
+                : "bg-white px-4 sm:px-10 py-3"
             }`}
           >
             {/* LOGO */}
             <div
-              className="relative w-[160px] h-[80px] flex items-center cursor-pointer"
+              className="cursor-pointer"
               onClick={() => router.push("/")}
             >
               <img
                 src={scrolled ? "/images/logo8.png" : "/images/newlogo.jpeg"}
                 alt="Logo"
                 className={`transition-all duration-500 ${
-                  scrolled ? "h-8" : "ml-4 h-20 w-22"
+                  scrolled ? "h-8" : "h-12 sm:h-16"
                 }`}
               />
             </div>
 
-            {/* NAVIGATION */}
-            <nav className="hidden md:flex items-center gap-12 font-sans ml-[-20px] mr-12">
+            {/* DESKTOP NAV */}
+            <nav className="hidden md:flex items-center gap-10 font-sans">
               {navItems.map((item) => {
                 const isActive =
                   item.path === "/"
@@ -113,7 +114,7 @@ export default function Header() {
                   <button
                     key={item.name}
                     onClick={() => router.push(item.path)}
-                    className={`relative text-[18px] font-medium transition
+                    className={`relative text-[17px] font-medium transition
                     ${
                       isActive ? "text-[#5f1616]" : "text-[#8a4343]"
                     }
@@ -133,24 +134,24 @@ export default function Header() {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowProducts(!showProducts)}
-                  className="flex items-center gap-1 text-[18px] font-medium text-[#8a4343] hover:text-[#5f1616]"
+                  className="flex items-center gap-1 text-[17px] font-medium text-[#8a4343] hover:text-[#5f1616]"
                 >
                   Products
                   <ChevronDown
                     size={18}
-                    className={`transition-transform duration-300 ${
+                    className={`transition-transform ${
                       showProducts ? "rotate-180" : ""
                     }`}
                   />
                 </button>
 
                 {showProducts && (
-                  <div className="absolute top-8 left-0 bg-white shadow-xl rounded-xl py-2 w-56 border border-gray-100">
+                  <div className="absolute top-8 left-0 bg-white shadow-xl rounded-xl py-2 w-56 border">
                     {products.map((product) => (
                       <button
                         key={product.id}
                         onClick={() => handleProductClick(product.id)}
-                        className="block w-full text-left px-4 py-2 text-sm text-[#8a4343] hover:bg-[#f6e7e7] hover:text-[#5f1616]"
+                        className="block w-full text-left px-4 py-2 text-sm text-[#8a4343] hover:bg-[#f6e7e7]"
                       >
                         {product.name}
                       </button>
@@ -161,15 +162,8 @@ export default function Header() {
             </nav>
 
             {/* RIGHT ACTIONS */}
-            <div className="flex items-center gap-6">
-              <button className="hidden md:block text-sm text-[#8a4343] hover:text-[#5f1616]">
-                Login
-              </button>
-
-              <button className="bg-[#ac4343] text-white text-xs px-4 py-1.5 rounded-full hover:bg-[#5f1616]">
-                Sign Up
-              </button>
-
+            <div className="flex items-center gap-3 sm:gap-5">
+              {/* CART */}
               <button className="relative">
                 <ShoppingCart className="w-5 h-5 text-[#1F2937]" />
                 <span className="absolute -top-2 -right-2 bg-[#F2C94C] text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
@@ -177,19 +171,82 @@ export default function Header() {
                 </span>
               </button>
 
+              {/* MOBILE MENU BUTTON */}
               <button
-                className="hidden md:flex text-sm text-[#8a4343] border border-[#8a4343] px-3 py-1.5 rounded-md hover:border-[#5f1616]"
-                onClick={() => router.push("/admin")}
+                className="md:hidden"
+                onClick={() => setMobileMenu(!mobileMenu)}
               >
-                Admin
+                {mobileMenu ? <X size={26} /> : <Menu size={26} />}
+              </button>
+
+              {/* DESKTOP BUTTONS */}
+              <button className="hidden md:block text-sm text-[#8a4343] hover:text-[#5f1616]">
+                Login
+              </button>
+
+              <button className="hidden md:block bg-[#ac4343] text-white text-xs px-4 py-1.5 rounded-full hover:bg-[#5f1616]">
+                Sign Up
               </button>
             </div>
           </div>
+
+          {/* MOBILE MENU */}
+          {mobileMenu && (
+            <div className="md:hidden bg-white shadow-xl rounded-xl mt-3 p-4 space-y-3">
+              {navItems.map((item) => (
+                <button
+                  key={item.name}
+                  onClick={() => {
+                    router.push(item.path);
+                    setMobileMenu(false);
+                  }}
+                  className="block w-full text-left text-[#8a4343] font-medium"
+                >
+                  {item.name}
+                </button>
+              ))}
+
+              {/* MOBILE PRODUCTS */}
+              <div>
+                <button
+                  onClick={() => setShowProducts(!showProducts)}
+                  className="flex justify-between w-full font-medium text-[#8a4343]"
+                >
+                  Products <ChevronDown size={18} />
+                </button>
+
+                {showProducts && (
+                  <div className="ml-3 mt-2 space-y-2">
+                    {products.map((product) => (
+                      <button
+                        key={product.id}
+                        onClick={() => handleProductClick(product.id)}
+                        className="block w-full text-left text-sm text-[#8a4343]"
+                      >
+                        {product.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* MOBILE LOGIN */}
+              <button className="block w-full text-left text-[#8a4343]">
+                Login
+              </button>
+
+              <button className="w-full bg-[#ac4343] text-white py-2 rounded-full">
+                Sign Up
+              </button>
+
+              
+            </div>
+          )}
         </div>
       </header>
 
-      {/* Spacer so content doesn't hide under fixed header */}
-      <div className="h-[120px]" />
+      {/* Spacer */}
+      <div className="h-[110px]" />
     </>
   );
 }
