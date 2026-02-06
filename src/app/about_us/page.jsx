@@ -153,9 +153,6 @@ export default function AboutPage() {
           Choose health. Choose Dirghayush Oils.
         </p>
 
-        <button className="bg-[#F2C94C] text-[#5f1616] font-semibold px-6 py-3 rounded-full hover:bg-yellow-400 transition">
-          Explore Products
-        </button>
       </section>
 
     </div>
