@@ -61,10 +61,14 @@ export default function Header() {
   ];
 
   const handleProductClick = (id) => {
-    router.push(`/products#${id}`);
-    setShowProducts(false);
-    setMobileMenu(false);
-  };
+  // Navigate to the individual product page dynamically
+  router.push(`/products/${id}`);
+
+  // Close dropdown and mobile menu
+  setShowProducts(false);
+  setMobileMenu(false);
+};
+
 
   return (
     <>
@@ -97,7 +101,7 @@ export default function Header() {
                 src={scrolled ? "/images/logo8.png" : "/images/newlogo.jpeg"}
                 alt="Logo"
                 className={`transition-all duration-500 ${
-                  scrolled ? "h-8" : "h-12 sm:h-16"
+                  scrolled ? "h-6" : "h-12 sm:h-16"
                 }`}
               />
             </div>
@@ -185,7 +189,7 @@ export default function Header() {
               </button>
 
               <button className="hidden md:block bg-[#ac4343] text-white text-xs px-4 py-1.5 rounded-full hover:bg-[#5f1616]">
-                Sign Up
+                Admin
               </button>
             </div>
           </div>

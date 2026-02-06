@@ -97,20 +97,22 @@ export default function Hero() {
             100% Pure Cold Pressed Oils
           </p>
 
-          {/* Products Grid */}
-          <div className="grid gap-6 sm:gap-8 mt-10 
-          grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+         {/* Products Grid */}
+    <div className="grid gap-6 sm:gap-8 mt-10 
+                grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
 
-            {visibleProducts.map((product) => (
-              <div key={product.id} id={product.id}>
-                <ProductCard
-                  image={product.image}
-                  title={product.title}
-                />
-              </div>
-            ))}
+   {visibleProducts.map((product) => (
+    <div key={product.id} id={product.id}>
+      <ProductCard
+        id={product.id}            // ✅ pass the id here
+        image={product.image}
+        title={product.title}
+      />
+     </div>
+      ))}
 
-          </div>
+    </div>
+
 
           {/* Button */}
           <button
