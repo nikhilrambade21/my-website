@@ -5,6 +5,9 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
+// ⭐ Import Cart Provider
+import { CartProvider } from "@/context/CartContext";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -26,14 +29,19 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* ⭐ Header appears on all pages */}
-        <Header />
+        {/* ⭐ Wrap Entire App Inside CartProvider */}
+        <CartProvider>
 
-        {/* ⭐ Page Content */}
-        {children}
+          {/* ⭐ Header appears on all pages */}
+          <Header />
 
-        {/* ⭐ Footer appears on all pages */}
-        <Footer />
+          {/* ⭐ Page Content */}
+          {children}
+
+          {/* ⭐ Footer appears on all pages */}
+          <Footer />
+
+        </CartProvider>
       </body>
     </html>
   );
