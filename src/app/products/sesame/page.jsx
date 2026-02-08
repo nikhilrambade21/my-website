@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useCart } from "@/context/CartContext";
 
 export default function WhiteSesameOil() {
+  const { addToCart } = useCart();
+
   const product = {
     id: "white-sesame",
     name: "White Sesame Oil",
@@ -29,18 +32,6 @@ export default function WhiteSesameOil() {
   };
 
   const [selectedSize, setSelectedSize] = useState(product.prices[0]);
-
-  const handleAddToCart = () => {
-    const cartItem = {
-      id: product.id,
-      name: product.name,
-      size: selectedSize.size,
-      price: selectedSize.price,
-      quantity: 1,
-    };
-
-    console.log("Added To Cart:", cartItem);
-  };
 
   return (
     <div className="min-h-screen bg-[#F5E9D3] py-10 px-4">
@@ -83,7 +74,7 @@ export default function WhiteSesameOil() {
             {/* Size Selection */}
             <div className="mt-6">
               <h3 className="font-semibold text-lg text-[#7B1616] mb-2">
-                Select
+                Select Size
               </h3>
 
               <div className="flex flex-wrap gap-3">
@@ -114,15 +105,22 @@ export default function WhiteSesameOil() {
 
             {/* Add To Cart */}
             <button
-              onClick={handleAddToCart}
-              className="mt-6 w-full md:w-auto bg-[#7B1616] hover:bg-[#5f1111]
-              text-white px-8 py-3 rounded-full text-sm md:text-base
-              shadow-md transition"
+              onClick={() =>
+                addToCart({
+                  id: product.id,
+                  name: product.name,
+                  size: selectedSize.size,
+                  price: selectedSize.price,
+                  image: product.image,
+                  quantity: 1,
+                })
+              }
+              className="mt-6 bg-[#5f1616] text-white px-6 py-2 rounded-lg hover:bg-[#7B1616] transition"
             >
               Add To Cart
             </button>
-          </div>
 
+          </div>
         </div>
       </div>
     </div>

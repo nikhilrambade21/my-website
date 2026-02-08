@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import Image from "next/image";
+import { CartContext } from "@/context/CartContext";
 
 export default function GroundnutOil() {
+  const { addToCart } = useContext(CartContext);
+
   const product = {
     id: "groundnut",
 
@@ -34,27 +37,24 @@ export default function GroundnutOil() {
   const [selectedSize, setSelectedSize] = useState(product.prices[0]);
 
   const handleAddToCart = () => {
-    const cartItem = {
+    addToCart({
       id: product.id,
       name: product.name,
       size: selectedSize.size,
       price: selectedSize.price,
+      image: product.image,
       quantity: 1,
-    };
-
-    console.log("Added To Cart:", cartItem);
+    });
   };
 
   return (
     <div className="min-h-screen bg-[#F5E9D3] py-10 px-4">
-
       <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-xl p-6 md:p-10">
 
         <div className="grid md:grid-cols-2 gap-8 items-center">
 
           {/* Product Image */}
           <div className="relative w-full h-[380px] sm:h-[420px] md:h-[530px] lg:h-[560px] rounded-2xl overflow-hidden border border-[#E7C873] shadow-md">
-
             <Image
               src={product.image}
               alt={product.name}
@@ -90,7 +90,7 @@ export default function GroundnutOil() {
             {/* Size Selection */}
             <div className="mt-6">
               <h3 className="font-semibold text-lg text-[#7B1616] mb-2">
-                Select 
+                Select
               </h3>
 
               <div className="flex flex-wrap gap-3">
@@ -122,16 +122,13 @@ export default function GroundnutOil() {
             {/* Add To Cart */}
             <button
               onClick={handleAddToCart}
-              className="mt-6 w-full md:w-auto bg-[#7B1616] hover:bg-[#5f1111]
-              text-white px-8 py-3 rounded-full text-sm md:text-base
-              shadow-md transition"
+              className="mt-6 bg-[#5f1616] hover:bg-[#7a1d1d] transition text-white px-6 py-3 rounded-lg font-semibold shadow-md"
             >
               Add To Cart
             </button>
 
           </div>
         </div>
-
       </div>
     </div>
   );

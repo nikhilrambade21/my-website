@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import Image from "next/image";
+import { CartContext } from "@/context/CartContext";
 
 export default function FlaxseedOil() {
+  const { addToCart } = useContext(CartContext);
+
   const product = {
     id: "flaxseed",
 
@@ -36,15 +39,14 @@ export default function FlaxseedOil() {
   const [selectedSize, setSelectedSize] = useState(product.prices[0]);
 
   const handleAddToCart = () => {
-    const cartItem = {
+    addToCart({
       id: product.id,
       name: product.name,
       size: selectedSize.size,
       price: selectedSize.price,
+      image: product.image,
       quantity: 1,
-    };
-
-    console.log("Added To Cart:", cartItem);
+    });
   };
 
   return (
@@ -120,12 +122,11 @@ export default function FlaxseedOil() {
             {/* Add To Cart */}
             <button
               onClick={handleAddToCart}
-              className="mt-6 w-full md:w-auto bg-[#7B1616] hover:bg-[#5f1111]
-              text-white px-8 py-3 rounded-full text-sm md:text-base
-              shadow-md transition"
+              className="mt-6 bg-[#5f1616] hover:bg-[#7a1d1d] transition text-white px-6 py-3 rounded-lg font-semibold shadow-md"
             >
               Add To Cart
             </button>
+
           </div>
 
         </div>

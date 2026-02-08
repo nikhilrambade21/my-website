@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import Image from "next/image";
+import { useCart } from "@/context/CartContext";
 
 export default function CoconutOil() {
+  const { addToCart } = useCart();
+
   const product = {
     id: "coconut",
 
@@ -22,8 +25,8 @@ export default function CoconutOil() {
     ],
 
     prices: [
-        { size: "100 ml", price: 85 },
-              { size: "200 ml", price: 170},
+      { size: "100 ml", price: 85 },
+      { size: "200 ml", price: 170 },
       { size: "500 ml", price: 410 },
       { size: "1 Liter", price: 800 },
       { size: "2 Liter", price: 1600 },
@@ -36,15 +39,14 @@ export default function CoconutOil() {
   const [selectedSize, setSelectedSize] = useState(product.prices[0]);
 
   const handleAddToCart = () => {
-    const cartItem = {
+    addToCart({
       id: product.id,
       name: product.name,
       size: selectedSize.size,
       price: selectedSize.price,
+      image: product.image,
       quantity: 1,
-    };
-
-    console.log("Added To Cart:", cartItem);
+    });
   };
 
   return (
@@ -120,12 +122,11 @@ export default function CoconutOil() {
             {/* Add To Cart */}
             <button
               onClick={handleAddToCart}
-              className="mt-6 w-full md:w-auto bg-[#7B1616] hover:bg-[#5f1111]
-              text-white px-8 py-3 rounded-full text-sm md:text-base
-              shadow-md transition"
+              className="mt-6 bg-[#5f1616] hover:bg-[#7a1d1d] transition text-white px-6 py-3 rounded-lg font-semibold shadow-md"
             >
               Add To Cart
             </button>
+
           </div>
 
         </div>

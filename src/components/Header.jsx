@@ -3,17 +3,28 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ShoppingCart, ChevronDown, Menu, X } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [showProducts, setShowProducts] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
 
+  const { cart } = useCart();
+
   const router = useRouter();
   const pathname = usePathname();
   const dropdownRef = useRef(null);
 
-  /* Scroll Floating Header */
+  /* ---------------- CART COUNT ---------------- */
+
+  const cartCount = cart.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+
+  /* ---------------- SCROLL ---------------- */
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 80);
@@ -23,7 +34,8 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  /* Close dropdown outside click */
+  /* ---------------- CLOSE DROPDOWN ---------------- */
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -39,7 +51,8 @@ export default function Header() {
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* Navigation Items */
+  /* ---------------- NAV ---------------- */
+
   const navItems = [
     { name: "Home", path: "/" },
     { name: "About Us", path: "/about_us" },
@@ -47,7 +60,6 @@ export default function Header() {
     { name: "Contact Us", path: "/contact_us" },
   ];
 
-  /* Products */
   const products = [
     { name: "Groundnut Oil", id: "groundnut" },
     { name: "Sunflower Oil", id: "sunflower" },
@@ -61,20 +73,16 @@ export default function Header() {
   ];
 
   const handleProductClick = (id) => {
-  // Navigate to the individual product page dynamically
-  router.push(`/products/${id}`);
-
-  // Close dropdown and mobile menu
-  setShowProducts(false);
-  setMobileMenu(false);
-};
-
+    router.push(`/products/${id}`);
+    setShowProducts(false);
+    setMobileMenu(false);
+  };
 
   return (
     <>
       {/* TOP BAR */}
       <div className="bg-[#5f1616] text-white text-xs sm:text-sm text-center py-2 font-medium">
-        Free Shipping on Orders Above ₹1999
+        Free Shipping on Orders Above ₹2999
       </div>
 
       {/* HEADER */}
@@ -118,35 +126,23 @@ export default function Header() {
                   <button
                     key={item.name}
                     onClick={() => router.push(item.path)}
-                    className={`relative text-[17px] font-medium transition
-                    ${
+                    className={`text-[17px] font-medium ${
                       isActive ? "text-[#5f1616]" : "text-[#8a4343]"
-                    }
-                    after:absolute after:left-0 after:-bottom-1
-                    after:h-[2px] after:bg-[#5f1616]
-                    after:transition-all after:duration-300
-                    ${isActive ? "after:w-full" : "after:w-0"}
-                    hover:after:w-full hover:text-[#5f1616]
-                  `}
+                    }`}
                   >
                     {item.name}
                   </button>
                 );
               })}
 
-              {/* PRODUCTS DROPDOWN */}
+              {/* PRODUCTS */}
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowProducts(!showProducts)}
-                  className="flex items-center gap-1 text-[17px] font-medium text-[#8a4343] hover:text-[#5f1616]"
+                  className="flex items-center gap-1 text-[17px] font-medium text-[#8a4343]"
                 >
                   Products
-                  <ChevronDown
-                    size={18}
-                    className={`transition-transform ${
-                      showProducts ? "rotate-180" : ""
-                    }`}
-                  />
+                  <ChevronDown size={18} />
                 </button>
 
                 {showProducts && (
@@ -166,13 +162,28 @@ export default function Header() {
             </nav>
 
             {/* RIGHT ACTIONS */}
-            <div className="flex items-center gap-3 sm:gap-5">
-              {/* CART */}
-              <button className="relative">
-                <ShoppingCart className="w-5 h-5 text-[#1F2937]" />
-                <span className="absolute -top-2 -right-2 bg-[#F2C94C] text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
-                  0
-                </span>
+            <div className="flex items-center gap-4">
+
+              {/* CART ICON */}
+              <button
+                onClick={() => router.push("/cart")}
+                className="relative"
+              >
+                <ShoppingCart className="w-6 h-6 text-[#1F2937]" />
+
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-[#F2C94C] text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-semibold">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+
+              {/* ADMIN BUTTON (Desktop) */}
+              <button
+                onClick={() => router.push("/admin")}
+                className="hidden md:block text-[#8a4343] font-medium"
+              >
+                Admin
               </button>
 
               {/* MOBILE MENU BUTTON */}
@@ -182,21 +193,14 @@ export default function Header() {
               >
                 {mobileMenu ? <X size={26} /> : <Menu size={26} />}
               </button>
-
-              {/* DESKTOP BUTTONS */}
-              <button className="hidden md:block text-sm text-[#8a4343] hover:text-[#5f1616]">
-                Login
-              </button>
-
-              <button className="hidden md:block bg-[#ac4343] text-white text-xs px-4 py-1.5 rounded-full hover:bg-[#5f1616]">
-                Admin
-              </button>
             </div>
           </div>
 
           {/* MOBILE MENU */}
           {mobileMenu && (
             <div className="md:hidden bg-white shadow-xl rounded-xl mt-3 p-4 space-y-3">
+
+              {/* NAV ITEMS */}
               {navItems.map((item) => (
                 <button
                   key={item.name}
@@ -210,7 +214,7 @@ export default function Header() {
                 </button>
               ))}
 
-              {/* MOBILE PRODUCTS */}
+              {/* PRODUCTS */}
               <div>
                 <button
                   onClick={() => setShowProducts(!showProducts)}
@@ -234,22 +238,33 @@ export default function Header() {
                 )}
               </div>
 
-              {/* MOBILE LOGIN */}
-              <button className="block w-full text-left text-[#8a4343]">
-                Login
+              {/* ⭐ MOBILE CART */}
+              <button
+                onClick={() => {
+                  router.push("/cart");
+                  setMobileMenu(false);
+                }}
+                className="block w-full text-left text-[#8a4343] font-medium"
+              >
+                🛒 Cart ({cartCount})
               </button>
 
-              <button className="w-full bg-[#ac4343] text-white py-2 rounded-full">
-                Sign Up
+              {/* ⭐ MOBILE ADMIN */}
+              <button
+                onClick={() => {
+                  router.push("/admin");
+                  setMobileMenu(false);
+                }}
+                className="block w-full text-left text-[#8a4343] font-medium"
+              >
+                🔐 Admin
               </button>
 
-              
             </div>
           )}
         </div>
       </header>
 
-      {/* Spacer */}
       <div className="h-[110px]" />
     </>
   );
