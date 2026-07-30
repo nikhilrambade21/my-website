@@ -283,31 +283,25 @@ const { isSignedIn } = useUser();
                 )}
               </div>
 
-              {/* MOBILE ACCOUNT */}
-{isSignedIn ? (
-    <UserButton afterSignOutUrl="/">
-      <UserButton.MenuItems>
-        <UserButton.Action
-          label="My Orders"
-          labelIcon={<ShoppingCart className="w-4 h-4" />}
-          onClick={() => router.push("/cart")}
-        />
-      </UserButton.MenuItems>
-    </UserButton>
-  ) : (
-    <>
-      <button
-        onClick={() => openSignIn()}
-        className="p-2 rounded-full text-[#5F1616] hover:bg-[#F2C94C]/15 transition-colors"
-      >
-        <User className="w-5 h-5 sm:w-6 sm:h-6" />
-      </button>
-
-      <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-1 whitespace-nowrap text-[11px] font-semibold text-[#5F1616] bg-[#F2C94C] px-2 py-1 rounded-md opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
-        Account
-      </span>
-    </>
-  )}
+              {isSignedIn ? (
+  <div
+    className="py-2 border-b border-[#C99A3B]/15"
+    onClick={() => setMobileMenu(false)}
+  >
+    <UserButton afterSignOutUrl="/" />
+  </div>
+) : (
+  <button
+    onClick={() => {
+      openSignIn();
+      setMobileMenu(false);
+    }}
+    className="flex items-center gap-2 w-full text-left text-[#5F1616] font-semibold py-2 border-b border-[#C99A3B]/15"
+  >
+    <User className="w-4 h-4" />
+    Sign In
+  </button>
+)}
 
               {/* MOBILE CART */}
               <button
@@ -320,12 +314,10 @@ const { isSignedIn } = useUser();
                 <ShoppingCart className="w-4 h-4" />
                 Cart ({cartCount})
               </button>
-
             </div>
           )}
         </div>
-      </header>
-
+          </header>
       <div className="h-[110px]" />
     </>
   );
