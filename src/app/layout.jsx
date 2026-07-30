@@ -4,7 +4,7 @@ import "./globals.css";
 // ⭐ Import Header & Footer
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-
+import { ClerkProvider } from "@clerk/nextjs";
 // ⭐ Import Cart Provider
 import { CartProvider } from "@/context/CartContext";
 
@@ -25,6 +25,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
+    <ClerkProvider>
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -44,5 +45,6 @@ export default function RootLayout({ children }) {
         </CartProvider>
       </body>
     </html>
+    </ClerkProvider>
   );
 }

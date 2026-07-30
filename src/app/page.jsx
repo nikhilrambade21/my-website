@@ -172,61 +172,7 @@ function GhaniWheel({ size = 320, spinning = true }) {
         fill="#241C14"
       />
 
-      {/* Rotating Beam */}
-
-      {mounted ? (
-        <motion.g
-          style={{
-            transformOrigin: `${cx}px ${cy}px`,
-          }}
-          animate={
-            spinning
-              ? {
-                  rotate: 360,
-                }
-              : {}
-          }
-          transition={{
-            duration: 22,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        >
-          <rect
-            x={cx - 3}
-            y={cy - 132}
-            width="6"
-            height="122"
-            rx="3"
-            fill="#241C14"
-          />
-
-          <circle
-            cx={cx}
-            cy={cy - 132}
-            r="7"
-            fill="#C99A3B"
-          />
-        </motion.g>
-      ) : (
-        <g>
-          <rect
-            x={cx - 3}
-            y={cy - 132}
-            width="6"
-            height="122"
-            rx="3"
-            fill="#241C14"
-          />
-
-          <circle
-            cx={cx}
-            cy={cy - 132}
-            r="7"
-            fill="#C99A3B"
-          />
-        </g>
-      )}
+     
     </svg>
   );
 }
@@ -333,7 +279,7 @@ export default function Hero() {
             </h2>
 
             <p className="mt-6 text-lg sm:text-xl text-[#5A1A1F] font-[family-name:var(--font-display),'Fraunces',serif] italic max-w-md">
-              १००% शुद्ध लाकडी घाण्यावरचे तेल
+              १०० % शुद्ध लाकडी घाण्यावरचे तेल
             </p>
 
             <p className="mt-4 text-sm sm:text-base text-[#241C14]/60 tracking-wide max-w-md font-[family-name:var(--font-mono),monospace]">
@@ -345,7 +291,7 @@ export default function Hero() {
                 href="#products"
                 className="bg-[#5A1A1F] hover:bg-[#241C14] text-[#F6EFDF] font-semibold px-8 py-3.5 rounded-full transition-colors duration-300"
               >
-                Explore the catalog
+                Explore Our Products
               </a>
               <a
                 href="#process"
