@@ -283,37 +283,6 @@ const { isSignedIn } = useUser();
                 )}
               </div>
 
-              {isSignedIn ? (
-  <div
-    className="py-2 border-b border-[#C99A3B]/15"
-    onClick={() => setMobileMenu(false)}
-  >
-    <UserButton afterSignOutUrl="/" />
-  </div>
-) : (
-  <button
-    onClick={() => {
-      openSignIn();
-      setMobileMenu(false);
-    }}
-    className="flex items-center gap-2 w-full text-left text-[#5F1616] font-semibold py-2 border-b border-[#C99A3B]/15"
-  >
-    <User className="w-4 h-4" />
-    Sign In
-  </button>
-)}
-
-              {/* MOBILE CART */}
-              <button
-                onClick={() => {
-                  router.push("/cart");
-                  setMobileMenu(false);
-                }}
-                className="flex items-center gap-2 w-full text-left text-[#5F1616] font-semibold py-2"
-              >
-                <ShoppingCart className="w-4 h-4" />
-                Cart ({cartCount})
-              </button>
             </div>
           )}
         </div>
