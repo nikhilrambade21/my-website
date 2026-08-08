@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
     name : {type : String , required:true},
     email : {type : String , required:true, unique:true},
     imageUrl : {type : String , required:true},
-    cartItems : {type : object , default:{}}
+    cartItems : {type : Object , default:{}}
 },{minimize:false})
 
 // creating user model 
