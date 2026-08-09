@@ -20,7 +20,7 @@ async function connectDB() {
         };
 
         cached.promise = mongoose.connect(
-            process.env.MONGODB_URI,
+            '${process.env.MONGODB_URI}/dirghayushoils',
             opts
         ).then((mongoose) => {
             return mongoose;
