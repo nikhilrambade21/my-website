@@ -6,7 +6,6 @@ export const inngest = new Inngest({
   id: "dirghayushoils-next",
 });
 
-
 // ==========================================
 // CREATE USER
 // ==========================================
@@ -19,6 +18,11 @@ export const syncUserCreation = inngest.createFunction(
     },
   },
   async ({ event }) => {
+    console.log("=================================");
+    console.log("CLERK USER CREATED EVENT");
+    console.log(JSON.stringify(event, null, 2));
+    console.log("=================================");
+
     const {
       id,
       first_name,
@@ -27,19 +31,41 @@ export const syncUserCreation = inngest.createFunction(
       image_url,
     } = event.data;
 
+    const email = email_addresses?.[0]?.email_address;
+
+    const name =
+      `${first_name || ""} ${last_name || ""}`.trim() ||
+      email?.split("@")[0] ||
+      `User-${id}`;
+
+    console.log("=================================");
+    console.log("FINAL USER DATA");
+    console.log({
+      id,
+      email,
+      first_name,
+      last_name,
+      name,
+      image_url,
+    });
+    console.log("=================================");
+
     const userData = {
       _id: id,
-      email: email_addresses?.[0]?.email_address,
-      name: `${first_name || ""} ${last_name || ""}`.trim(),
-      imageUrl: image_url,
+      email: email,
+      name: name,
+      imageUrl: image_url || "",
     };
 
     await connectDB();
 
+    console.log("CREATING MONGODB USER:", userData);
+
     await User.create(userData);
+
+    console.log("USER CREATED SUCCESSFULLY");
   }
 );
-
 
 // ==========================================
 // UPDATE USER
@@ -61,18 +87,29 @@ export const syncUserUpdation = inngest.createFunction(
       image_url,
     } = event.data;
 
+    const email = email_addresses?.[0]?.email_address;
+
+    const name =
+      `${first_name || ""} ${last_name || ""}`.trim() ||
+      email?.split("@")[0] ||
+      "User";
+
     const userData = {
-      email: email_addresses?.[0]?.email_address,
-      name: `${first_name || ""} ${last_name || ""}`.trim(),
-      imageUrl: image_url,
+      email,
+      name,
+      imageUrl: image_url || "",
     };
 
     await connectDB();
 
     await User.findByIdAndUpdate(id, userData);
+
+    return {
+      success: true,
+      message: "User updated successfully",
+    };
   }
 );
-
 
 // ==========================================
 // DELETE USER
@@ -91,5 +128,10 @@ export const syncUserDeletion = inngest.createFunction(
     await connectDB();
 
     await User.findByIdAndDelete(id);
+
+    return {
+      success: true,
+      message: "User deleted successfully",
+    };
   }
 );
