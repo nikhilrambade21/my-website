@@ -10,6 +10,9 @@ import {
   Menu,
   X,
   User,
+  ShoppingBag,
+  ShoppingBasket,
+  ShoppingBagIcon,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
@@ -30,12 +33,22 @@ export default function Header() {
   // Mobile main menu
   const [mobileMenu, setMobileMenu] = useState(false);
 
+  // MongoDB products
+  const [products, setProducts] = useState([]);
+
+  // Product loading state
+  const [productsLoading, setProductsLoading] = useState(true);
+
   /* ==================================================
      CLERK
   ================================================== */
 
   const { openSignIn } = useClerk();
-  const { isSignedIn } = useUser();
+
+  const { user, isSignedIn } = useUser();
+
+  // Check Clerk Public Metadata
+  const isSeller = user?.publicMetadata?.role === "seller";
 
   /* ==================================================
      ROUTER
@@ -82,6 +95,77 @@ export default function Header() {
   }, [pathname]);
 
   /* ==================================================
+     FETCH PRODUCTS FROM MONGODB
+  ================================================== */
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setProductsLoading(true);
+
+        const response = await fetch("/api/product/list", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data?.message || "Failed to load products"
+          );
+        }
+
+        const databaseProducts = Array.isArray(data.products)
+          ? data.products
+          : [];
+
+        /*
+         * Convert MongoDB products into the format
+         * needed by the dropdown.
+         *
+         * MongoDB:
+         *
+         * {
+         *   _id: "...",
+         *   name: "White Sesame Oil"
+         * }
+         *
+         * Becomes:
+         *
+         * {
+         *   id: "...",
+         *   name: "White Sesame Oil"
+         * }
+         */
+
+        const formattedProducts = databaseProducts
+          .map((product) => ({
+            id: product._id || product.id,
+            name:
+              product.name ||
+              product.title ||
+              "Product",
+          }))
+          .filter((product) => product.id);
+
+        setProducts(formattedProducts);
+      } catch (error) {
+        console.error(
+          "Header product fetch error:",
+          error
+        );
+
+        setProducts([]);
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  /* ==================================================
      NAVIGATION ITEMS
   ================================================== */
 
@@ -105,59 +189,33 @@ export default function Header() {
   ];
 
   /* ==================================================
-     PRODUCTS
-  ================================================== */
-
-  const products = [
-    {
-      name: "Groundnut Oil",
-      id: "groundnut",
-    },
-    {
-      name: "Sunflower Oil",
-      id: "sunflower",
-    },
-    {
-      name: "Coconut Oil",
-      id: "coconut",
-    },
-    {
-      name: "Safflower Oil",
-      id: "safflower",
-    },
-    {
-      name: "Mustard Oil",
-      id: "mustard",
-    },
-    {
-      name: "White Sesame Oil",
-      id: "sesame",
-    },
-    {
-      name: "Niger Oil",
-      id: "niger",
-    },
-    {
-      name: "Flaxseed Oil",
-      id: "flaxseed",
-    },
-    {
-      name: "Almond Oil",
-      id: "almond",
-    },
-  ];
-
-  /* ==================================================
-     DESKTOP PRODUCT CLICK
+     PRODUCT CLICK
   ================================================== */
 
   const handleProductClick = (id) => {
-    // Close all menus first
+    if (!id) {
+      console.error("Product ID is missing");
+      return;
+    }
+
     setShowProducts(false);
     setShowMobileProducts(false);
     setMobileMenu(false);
 
-    // Navigate
+    /*
+     * IMPORTANT:
+     *
+     * We now use the MongoDB _id.
+     *
+     * Example:
+     *
+     * /products/6aa1081313fa8d17fe1899
+     *
+     * NOT:
+     *
+     * /products/sesame
+     */
+
     router.push(`/products/${id}`);
   };
 
@@ -191,20 +249,26 @@ export default function Header() {
 
   /* ==================================================
      ACCOUNT / CLERK LOGIN
-     
-     IMPORTANT:
-     Do NOT add huge z-index values to the header.
-     Clerk's modal must appear above the header.
   ================================================== */
 
   const handleAccountClick = () => {
-    // Close any open menus before opening Clerk
     setMobileMenu(false);
     setShowMobileProducts(false);
     setShowProducts(false);
 
-    // Open Clerk sign-in
     openSignIn();
+  };
+
+  /* ==================================================
+     SELLER DASHBOARD
+  ================================================== */
+
+  const handleSellerDashboardClick = () => {
+    setShowProducts(false);
+    setShowMobileProducts(false);
+    setMobileMenu(false);
+
+    router.push("/seller");
   };
 
   /* ==================================================
@@ -305,7 +369,7 @@ export default function Header() {
               <img
                 src={
                   scrolled
-                    ? "/images/logo8.png"
+                    ? "/images/logo12.png"
                     : "/images/newlogo.jpeg"
                 }
                 alt="Dirghayush Oils"
@@ -315,7 +379,7 @@ export default function Header() {
 
                   ${
                     scrolled
-                      ? "h-6"
+                      ? "h-10 sm:h-12"
                       : "h-12 sm:h-16"
                   }
                 `}
@@ -392,8 +456,6 @@ export default function Header() {
 
               <div className="relative">
 
-                {/* PRODUCTS BUTTON */}
-
                 <button
                   type="button"
                   onClick={() => {
@@ -401,7 +463,6 @@ export default function Header() {
                       (previous) => !previous
                     );
 
-                    // Close mobile menu
                     setMobileMenu(false);
                     setShowMobileProducts(false);
                   }}
@@ -470,36 +531,104 @@ export default function Header() {
                       overflow-hidden
                     "
                   >
-                    {products.map((product) => (
-                      <button
-                        key={product.id}
-                        type="button"
-                        onClick={() =>
-                          handleProductClick(
-                            product.id
-                          )
-                        }
+
+                    {productsLoading ? (
+
+                      <div
                         className="
-                          block
-                          w-full
-                          text-left
                           px-4
-                          py-2
+                          py-3
                           text-sm
-                          text-[#5F1616]/80
-                          hover:bg-[#F2C94C]/15
-                          hover:text-[#5F1616]
-                          transition-colors
-                          cursor-pointer
+                          text-[#5F1616]/60
                         "
                       >
-                        {product.name}
-                      </button>
-                    ))}
+                        Loading products...
+                      </div>
+
+                    ) : products.length === 0 ? (
+
+                      <div
+                        className="
+                          px-4
+                          py-3
+                          text-sm
+                          text-[#5F1616]/60
+                        "
+                      >
+                        No products available
+                      </div>
+
+                    ) : (
+
+                      products.map((product) => (
+
+                        <button
+                          key={product.id}
+                          type="button"
+                          onClick={() =>
+                            handleProductClick(
+                              product.id
+                            )
+                          }
+                          className="
+                            block
+                            w-full
+                            text-left
+                            px-4
+                            py-2
+                            text-sm
+                            text-[#5F1616]/80
+                            hover:bg-[#F2C94C]/15
+                            hover:text-[#5F1616]
+                            transition-colors
+                            cursor-pointer
+                          "
+                        >
+                          {product.name}
+                        </button>
+
+                      ))
+
+                    )}
+
                   </div>
                 )}
 
               </div>
+
+              {/* ==================================================
+                  DESKTOP SELLER DASHBOARD
+
+                  ONLY VISIBLE TO USERS WITH:
+                  publicMetadata.role === "seller"
+              ================================================== */}
+
+              {isSeller && (
+                <button
+                  type="button"
+                  onClick={handleSellerDashboardClick}
+                  className="
+                    px-3
+                    py-1.5
+                    rounded-md
+                    bg-[#F5E9D3]
+                    text-[#5F1616]
+                    text-xs
+                    font-semibold
+                    border
+                    border-[#E7C873]
+                    hover:bg-[#E7C873]
+                    hover:text-[#5F1616]
+                    transition-all
+                    duration-300
+                    whitespace-nowrap
+                    cursor-pointer
+                  "
+                >
+                  Seller Dashboard
+                </button>
+              )}
+
             </nav>
 
             {/* ==================================================
@@ -523,11 +652,12 @@ export default function Header() {
               <div className="relative group">
 
                 {isSignedIn ? (
+
                   <UserButton afterSignOutUrl="/">
                     <UserButton.MenuItems>
 
                       <UserButton.Action
-                        label="My Orders"
+                        label="Cart"
                         labelIcon={
                           <ShoppingCart className="w-4 h-4" />
                         }
@@ -535,10 +665,28 @@ export default function Header() {
                           router.push("/cart")
                         }
                       />
+                      
+
+                    </UserButton.MenuItems>
+                    <UserButton.MenuItems>
+
+                      <UserButton.Action
+                        label="My Orders"
+                        labelIcon={
+                          <ShoppingBag className="w-4 h-4" />
+                        }
+                        onClick={() =>
+                          router.push("/cart")
+                        }
+                      />
+                      
 
                     </UserButton.MenuItems>
                   </UserButton>
+                  
+
                 ) : (
+
                   <>
                     <button
                       type="button"
@@ -591,100 +739,12 @@ export default function Header() {
                       Account
                     </span>
                   </>
+
                 )}
 
               </div>
 
-              {/* ==================================================
-                  CART
-              ================================================== */}
-
-              <div className="relative group">
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenu(false);
-                    setShowMobileProducts(false);
-                    setShowProducts(false);
-
-                    router.push("/cart");
-                  }}
-                  aria-label="Cart"
-                  className="
-                    relative
-                    p-2
-                    rounded-full
-                    text-[#5F1616]
-                    hover:bg-[#F2C94C]/15
-                    transition-colors
-                  "
-                >
-                  <ShoppingCart
-                    className="
-                      w-5
-                      h-5
-                      sm:w-6
-                      sm:h-6
-                    "
-                  />
-
-                  {cartCount > 0 && (
-                    <span
-                      className="
-                        absolute
-                        top-0
-                        right-0
-                        bg-[#F2C94C]
-                        text-[#5F1616]
-                        text-[10px]
-                        w-5
-                        h-5
-                        rounded-full
-                        flex
-                        items-center
-                        justify-center
-                        font-bold
-                        border
-                        border-white
-                      "
-                    >
-                      {cartCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* CART TOOLTIP */}
-
-                <span
-                  className="
-                    pointer-events-none
-                    absolute
-                    top-full
-                    left-1/2
-                    -translate-x-1/2
-                    mt-1
-                    whitespace-nowrap
-                    text-[11px]
-                    font-semibold
-                    text-[#5F1616]
-                    bg-[#F2C94C]
-                    px-2
-                    py-1
-                    rounded-md
-                    opacity-0
-                    -translate-y-1
-                    group-hover:opacity-100
-                    group-hover:translate-y-0
-                    transition-all
-                    duration-200
-                  "
-                >
-                  Cart
-                </span>
-
-              </div>
-
+            
               {/* ==================================================
                   MOBILE MENU BUTTON
               ================================================== */}
@@ -713,6 +773,7 @@ export default function Header() {
               </button>
 
             </div>
+
           </div>
 
           {/* ==================================================
@@ -766,6 +827,60 @@ export default function Header() {
                 ))}
 
               </div>
+
+              {/* ==================================================
+                  MOBILE SELLER DASHBOARD
+
+                  ONLY VISIBLE TO SELLERS
+              ================================================== */}
+
+              {isSeller && (
+                <div
+                  className="
+                    py-3
+                    border-b
+                    border-[#C99A3B]/15
+                    flex
+                    justify-center
+                  "
+                >
+                  <button
+                    type="button"
+                    onClick={
+                      handleSellerDashboardClick
+                    }
+                    className="
+                      flex
+                      items-center
+                      justify-center
+                      gap-2
+                      px-4
+                      py-2
+                      rounded-md
+                      bg-[#F5E9D3]
+                      text-[#5F1616]
+                      border
+                      border-[#E7C873]
+                      text-xs
+                      font-semibold
+                      hover:bg-[#E7C873]
+                      hover:text-[#5F1616]
+                      transition-all
+                      duration-300
+                      cursor-pointer
+                      touch-manipulation
+                    "
+                  >
+                    <span>
+                      Seller Dashboard
+                    </span>
+
+                    <span className="text-sm">
+                      →
+                    </span>
+                  </button>
+                </div>
+              )}
 
               {/* ==================================================
                   MOBILE PRODUCTS
@@ -836,40 +951,74 @@ export default function Header() {
                       flex-col
                     "
                   >
-                    {products.map((product) => (
-                      <Link
-                        key={product.id}
-                        href={`/products/${product.id}`}
-                        onClick={() => {
-                          // Close everything immediately
-                          setShowMobileProducts(false);
-                          setMobileMenu(false);
-                          setShowProducts(false);
-                        }}
+
+                    {productsLoading ? (
+
+                      <div
                         className="
-                          block
-                          w-full
-                          text-left
                           py-3
                           px-2
                           text-sm
-                          text-[#5F1616]/75
-                          hover:text-[#5F1616]
-                          hover:bg-[#F2C94C]/10
-                          active:bg-[#F2C94C]/20
-                          rounded-md
-                          transition-colors
-                          cursor-pointer
-                          touch-manipulation
+                          text-[#5F1616]/60
                         "
                       >
-                        {product.name}
-                      </Link>
-                    ))}
+                        Loading products...
+                      </div>
+
+                    ) : products.length === 0 ? (
+
+                      <div
+                        className="
+                          py-3
+                          px-2
+                          text-sm
+                          text-[#5F1616]/60
+                        "
+                      >
+                        No products available
+                      </div>
+
+                    ) : (
+
+                      products.map((product) => (
+
+                        <Link
+                          key={product.id}
+                          href={`/products/${product.id}`}
+                          onClick={() => {
+                            setShowMobileProducts(false);
+                            setMobileMenu(false);
+                            setShowProducts(false);
+                          }}
+                          className="
+                            block
+                            w-full
+                            text-left
+                            py-3
+                            px-2
+                            text-sm
+                            text-[#5F1616]/75
+                            hover:text-[#5F1616]
+                            hover:bg-[#F2C94C]/10
+                            active:bg-[#F2C94C]/20
+                            rounded-md
+                            transition-colors
+                            cursor-pointer
+                            touch-manipulation
+                          "
+                        >
+                          {product.name}
+                        </Link>
+
+                      ))
+
+                    )}
+
                   </div>
                 )}
 
               </div>
+
             </div>
           )}
 

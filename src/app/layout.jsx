@@ -1,12 +1,10 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-// ⭐ Import Header & Footer
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { AppContextProvider } from "@/context/AppContext";
+import { Toaster } from "react-hot-toast";
 import { ClerkProvider } from "@clerk/nextjs";
-// ⭐ Import Cart Provider
 import { CartProvider } from "@/context/CartContext";
+import SiteLayout from "@/components/SiteLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,25 +24,20 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <ClerkProvider>
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {/* ⭐ Wrap Entire App Inside CartProvider */}
-        <CartProvider>
-
-          {/* ⭐ Header appears on all pages */}
-          <Header />
-
-          {/* ⭐ Page Content */}
-          {children}
-
-          {/* ⭐ Footer appears on all pages */}
-          <Footer />
-
-        </CartProvider>
-      </body>
-    </html>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <AppContextProvider>
+          <CartProvider>
+            <SiteLayout>
+              {children}
+              <Toaster/>
+            </SiteLayout>
+          </CartProvider>
+          </AppContextProvider>
+        </body>
+      </html>
     </ClerkProvider>
   );
 }
