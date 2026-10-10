@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import Product from "../../../../models/product";
-import connectDB from "../../../../config/db";
+import Product from "../../../../../models/product";
+import connectDB from "../../../../../config/db";
 
 export async function GET() {
   try {
