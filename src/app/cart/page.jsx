@@ -988,7 +988,7 @@ export default function CartPage() {
             <button
               type="button"
               onClick={() =>
-                router.push("/shop")
+                router.push("/")
               }
               className="
                 mt-8
