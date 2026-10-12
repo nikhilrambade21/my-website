@@ -180,35 +180,56 @@ export const syncUserDeletion = inngest.createFunction(
 //
 // It only processes the event in background.
 // ==========================================
-
-export const processUserOrder = inngest.createFunction(
+export const createUserOrder = inngest.createFunction(
     {
-        id: "process-user-order",
-
-        triggers: {
-            event: "order/created",
+        id: "create-user-order",
+        triggers: { event: "order/created" },
+        batchEvents: {
+            maxSize: 5,
+            timeout: "5s",
         },
     },
+    async ({ events }) => {
+        try {
+            console.log("=================================");
+            console.log("INNGEST CREATE USER ORDER");
+            console.log("EVENTS RECEIVED:", events.length);
+            console.log("=================================");
 
-    async ({ event }) => {
-        console.log("=================================");
-        console.log("ORDER CREATED EVENT");
-        console.log("=================================");
+            const orders = events.map((event) => {
+                console.log("ORDER EVENT DATA:", event.data);
 
-        console.log("Order ID:", event.data.orderId);
-        console.log("User ID:", event.data.userId);
-        console.log("Amount:", event.data.amounts);
-        console.log("Address:", event.data.address);
-        console.log("Items:", event.data.items);
+                return {
+                    userId: event.data.userId,
+                    items: event.data.items,
+                    amounts: event.data.amounts,
+                    address: event.data.address,
+                    date: event.data.date || Date.now(),
+                };
+            });
 
-        console.log("=================================");
-        console.log("ORDER PROCESSED BY INNGEST");
-        console.log("=================================");
+            await connectDB();
 
-        return {
-            success: true,
-            message: "Order processed successfully",
-            orderId: event.data.orderId,
-        };
+            console.log("CREATING ORDERS IN MONGODB...");
+
+            const createdOrders = await Order.insertMany(orders);
+
+            console.log("=================================");
+            console.log("ORDERS CREATED SUCCESSFULLY");
+            console.log("COUNT:", createdOrders.length);
+            console.log("=================================");
+
+            return {
+                success: true,
+                processed: createdOrders.length,
+            };
+        } catch (error) {
+            console.error("=================================");
+            console.error("INNGEST CREATE ORDER ERROR");
+            console.error(error);
+            console.error("=================================");
+
+            throw error;
+        }
     }
 );
