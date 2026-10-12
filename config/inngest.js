@@ -1,7 +1,7 @@
 import { Inngest } from "inngest";
 import connectDB from "./db";
 import User from "../models/user";
-import Order from "../models/Order";
+
 
 export const inngest = new Inngest({
     id: "dirghayushoils-next",
@@ -193,42 +193,31 @@ export const createUserOrder = inngest.createFunction(
     async ({ events }) => {
         try {
             console.log("=================================");
-            console.log("INNGEST CREATE USER ORDER");
+            console.log("INNGEST ORDER PROCESSING");
             console.log("EVENTS RECEIVED:", events.length);
             console.log("=================================");
 
-            const orders = events.map((event) => {
-                console.log("ORDER EVENT DATA:", event.data);
-
-                return {
-                    userId: event.data.userId,
-                    items: event.data.items,
-                    amounts: event.data.amounts,
-                    address: event.data.address,
-                    date: event.data.date || Date.now(),
-                };
-            });
-
-            await connectDB();
-
-            console.log("CREATING ORDERS IN MONGODB...");
-
-            const createdOrders = await Order.insertMany(orders);
+            for (const event of events) {
+                console.log("ORDER ID:", event.data.orderId);
+                console.log("USER ID:", event.data.userId);
+                console.log("AMOUNT:", event.data.amounts);
+                console.log("ADDRESS:", event.data.address);
+                console.log("ITEMS:", event.data.items);
+            }
 
             console.log("=================================");
-            console.log("ORDERS CREATED SUCCESSFULLY");
-            console.log("COUNT:", createdOrders.length);
+            console.log("ORDER PROCESSED SUCCESSFULLY");
             console.log("=================================");
 
             return {
                 success: true,
-                processed: createdOrders.length,
+                processed: events.length,
             };
         } catch (error) {
-            console.error("=================================");
-            console.error("INNGEST CREATE ORDER ERROR");
-            console.error(error);
-            console.error("=================================");
+            console.error(
+                "INNGEST ORDER PROCESSING ERROR:",
+                error
+            );
 
             throw error;
         }
