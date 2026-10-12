@@ -676,7 +676,7 @@ export default function Header() {
                           <ShoppingBag className="w-4 h-4" />
                         }
                         onClick={() =>
-                          router.push("/cart")
+                          router.push("/my-orders")
                         }
                       />
                       

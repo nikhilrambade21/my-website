@@ -718,119 +718,231 @@ export default function CartPage() {
   /* =====================================================
      PLACE ORDER
   ===================================================== */
+/* =====================================================
+   PLACE ORDER
+===================================================== */
+/* =====================================================
+   PLACE ORDER
+===================================================== */
 
-  const handlePlaceOrder =
-    async () => {
-      if (!cartProducts.length) {
-        toast.error(
-          "Your cart is empty"
-        );
+const handlePlaceOrder = async () => {
+  if (!cartProducts.length) {
+    toast.error("Your cart is empty");
+    return;
+  }
 
-        return;
-      }
+  if (!selectedAddress) {
+    toast.error("Please select a delivery address");
+    return;
+  }
 
-      if (!selectedAddress) {
-        toast.error(
-          "Please select a delivery address"
-        );
+  if (!user) {
+    toast.error("Please sign in before placing your order");
+    return;
+  }
 
-        return;
-      }
+  try {
+    setPlacingOrder(true);
 
-      if (!user) {
-        toast.error(
-          "Please sign in before placing your order"
-        );
+    /* =================================================
+       GET CLERK TOKEN
+    ================================================= */
 
-        return;
-      }
+    const token = await getToken();
 
-      try {
-        setPlacingOrder(true);
+    if (!token) {
+      toast.error(
+        "Authentication failed. Please sign in again."
+      );
+      return;
+    }
 
-        const orderData = {
-          customer: {
-            name:
-              selectedAddress.name,
+    /* =================================================
+       PREPARE CART ITEMS
+    ================================================= */
 
-            phone:
-              selectedAddress.phone,
+    const cartItemsArray = Object.entries(cartItems)
+      .map(([key, value]) => {
+        if (
+          typeof value === "object" &&
+          value !== null
+        ) {
+          return {
+            product: value.productId || key,
+            quantity: Number(
+              value.quantity || 0
+            ),
+          };
+        }
 
-            email:
-              userData?.email ||
-              user
-                ?.primaryEmailAddress
-                ?.emailAddress ||
-              "",
-
-            address:
-              selectedAddress.address,
-
-            city:
-              selectedAddress.city,
-
-            state:
-              selectedAddress.state,
-
-            pincode:
-              selectedAddress.pincode,
-          },
-
-          items: cartProducts.map(
-            (item) => ({
-              productId:
-                item.productId,
-
-              name:
-                item.product.name,
-
-              size:
-                item.size,
-
-              price:
-                item.price,
-
-              quantity:
-                item.quantity,
-
-              subtotal:
-                item.price *
-                item.quantity,
-            })
-          ),
-
-          subtotal,
-          shipping,
-          total,
+        return {
+          product: key,
+          quantity: Number(value || 0),
         };
+      })
+      .filter(
+        (item) => item.quantity > 0
+      );
 
-        console.log(
-          "ORDER DATA:",
+    if (cartItemsArray.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+
+    /* =================================================
+       PREPARE ORDER DATA
+    ================================================= */
+
+   const orderData = {
+    address: selectedAddress.id,
+    items: cartItemsArray,
+    amounts: Number(total),
+};
+
+console.log(
+    "FINAL ORDER DATA:",
+    JSON.stringify(orderData, null, 2)
+);
+
+    console.log(
+      "================================"
+    );
+
+    console.log(
+      "ORDER DATA SENT TO API:"
+    );
+
+    console.log(
+      JSON.stringify(
+        orderData,
+        null,
+        2
+      )
+    );
+
+    console.log(
+      "================================"
+    );
+
+    /* =================================================
+       CREATE ORDER
+    ================================================= */
+
+    const response = await fetch(
+      "/api/order/create",
+      {
+        method: "POST",
+
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify(
           orderData
-        );
-
-        /*
-         * Connect your existing
-         * order API here.
-         */
-
-        toast.success(
-          "Order details are ready!"
-        );
-      } catch (error) {
-        console.error(
-          "Place order error:",
-          error
-        );
-
-        toast.error(
-          "Unable to place order"
-        );
-      } finally {
-        setPlacingOrder(false);
+        ),
       }
-    };
+    );
 
+    /* =================================================
+       READ API RESPONSE
+    ================================================= */
+
+    const responseText =
+      await response.text();
+
+    console.log(
+      "ORDER API STATUS:",
+      response.status
+    );
+
+    console.log(
+      "ORDER API RESPONSE:",
+      responseText
+    );
+
+    let data;
+
+    try {
+      data = JSON.parse(
+        responseText
+      );
+    } catch (error) {
+      console.error(
+        "ORDER JSON PARSE ERROR:",
+        error
+      );
+
+      throw new Error(
+        "Order API returned an invalid response."
+      );
+    }
+
+    /* =================================================
+       CHECK ORDER RESULT
+    ================================================= */
+
+    if (
+      !response.ok ||
+      !data?.success
+    ) {
+      throw new Error(
+        data?.message ||
+          "Unable to place order"
+      );
+    }
+
+    /* =================================================
+       ORDER SUCCESS
+    ================================================= */
+
+    console.log(
+      "ORDER CREATED SUCCESSFULLY:",
+      data
+    );
+
+    toast.success(
+      data.message ||
+        "Order placed successfully!"
+    );
+
+    /*
+     * IMPORTANT:
+     *
+     * Do not call:
+     *
+     * setCartItems({})
+     *
+     * because your current AppContext does not
+     * provide setCartItems.
+     */
+
+    /* =================================================
+       REDIRECT TO SUCCESS PAGE
+    ================================================= */
+
+    router.push(
+      "/order-placed"
+    );
+
+  } catch (error) {
+
+    console.error(
+      "PLACE ORDER ERROR:",
+      error
+    );
+
+    toast.error(
+      error?.message ||
+        "Unable to place order"
+    );
+
+  } finally {
+
+    setPlacingOrder(false);
+
+  }
+};
   /* =====================================================
      LOADING
   ===================================================== */

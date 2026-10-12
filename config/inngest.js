@@ -1,11 +1,9 @@
-
 import { Inngest } from "inngest";
 import connectDB from "./db";
 import User from "../models/user";
-import Order from "../models/Order";
 
 export const inngest = new Inngest({
-  id: "dirghayushoils-next",
+    id: "dirghayushoils-next",
 });
 
 // ==========================================
@@ -13,60 +11,73 @@ export const inngest = new Inngest({
 // ==========================================
 
 export const syncUserCreation = inngest.createFunction(
-  {
-    id: "sync-user-from-clerk",
-    triggers: {
-      event: "clerk/user.created",
+    {
+        id: "sync-user-from-clerk",
+
+        triggers: {
+            event: "clerk/user.created",
+        },
     },
-  },
-  async ({ event }) => {
-    console.log("=================================");
-    console.log("CLERK USER CREATED EVENT");
-    console.log(JSON.stringify(event, null, 2));
-    console.log("=================================");
 
-    const {
-      id,
-      first_name,
-      last_name,
-      email_addresses,
-      image_url,
-    } = event.data;
+    async ({ event }) => {
+        console.log("=================================");
+        console.log("CLERK USER CREATED EVENT");
+        console.log(JSON.stringify(event, null, 2));
+        console.log("=================================");
 
-    const email = email_addresses?.[0]?.email_address;
+        const {
+            id,
+            first_name,
+            last_name,
+            email_addresses,
+            image_url,
+        } = event.data;
 
-    const name =
-      `${first_name || ""} ${last_name || ""}`.trim() ||
-      email?.split("@")[0] ||
-      `User-${id}`;
+        const email =
+            email_addresses?.[0]?.email_address;
 
-    console.log("=================================");
-    console.log("FINAL USER DATA");
-    console.log({
-      id,
-      email,
-      first_name,
-      last_name,
-      name,
-      image_url,
-    });
-    console.log("=================================");
+        const name =
+            `${first_name || ""} ${last_name || ""}`.trim() ||
+            email?.split("@")[0] ||
+            `User-${id}`;
 
-    const userData = {
-      _id: id,
-      email: email,
-      name: name,
-      imageUrl: image_url || "",
-    };
+        console.log("=================================");
+        console.log("FINAL USER DATA");
+        console.log({
+            id,
+            email,
+            first_name,
+            last_name,
+            name,
+            image_url,
+        });
+        console.log("=================================");
 
-    await connectDB();
+        const userData = {
+            _id: id,
+            email: email,
+            name: name,
+            imageUrl: image_url || "",
+        };
 
-    console.log("CREATING MONGODB USER:", userData);
+        await connectDB();
 
-    await User.create(userData);
+        console.log(
+            "CREATING MONGODB USER:",
+            userData
+        );
 
-    console.log("USER CREATED SUCCESSFULLY");
-  }
+        await User.create(userData);
+
+        console.log(
+            "USER CREATED SUCCESSFULLY"
+        );
+
+        return {
+            success: true,
+            message: "User created successfully",
+        };
+    }
 );
 
 // ==========================================
@@ -74,43 +85,54 @@ export const syncUserCreation = inngest.createFunction(
 // ==========================================
 
 export const syncUserUpdation = inngest.createFunction(
-  {
-    id: "update-user-from-clerk",
-    triggers: {
-      event: "clerk/user.updated",
+    {
+        id: "update-user-from-clerk",
+
+        triggers: {
+            event: "clerk/user.updated",
+        },
     },
-  },
-  async ({ event }) => {
-    const {
-      id,
-      first_name,
-      last_name,
-      email_addresses,
-      image_url,
-    } = event.data;
 
-    const email = email_addresses?.[0]?.email_address;
+    async ({ event }) => {
+        const {
+            id,
+            first_name,
+            last_name,
+            email_addresses,
+            image_url,
+        } = event.data;
 
-    const name =
-      `${first_name || ""} ${last_name || ""}`.trim() ||
-      email?.split("@")[0] ||
-      "User";
+        const email =
+            email_addresses?.[0]?.email_address;
 
-    const userData = {
-      email,
-      name,
-      imageUrl: image_url || "",
-    };
+        const name =
+            `${first_name || ""} ${last_name || ""}`.trim() ||
+            email?.split("@")[0] ||
+            "User";
 
-    await connectDB();
+        const userData = {
+            email,
+            name,
+            imageUrl: image_url || "",
+        };
 
-    await User.findByIdAndUpdate(id, userData);
+        await connectDB();
 
-    return {
-      success: true,
-      message: "User updated successfully",
-    };
-  }
+        await User.findByIdAndUpdate(
+            id,
+            userData
+        );
+
+        console.log(
+            "USER UPDATED SUCCESSFULLY:",
+            id
+        );
+
+        return {
+            success: true,
+            message: "User updated successfully",
+        };
+    }
 );
 
 // ==========================================
@@ -118,62 +140,75 @@ export const syncUserUpdation = inngest.createFunction(
 // ==========================================
 
 export const syncUserDeletion = inngest.createFunction(
-  {
-    id: "delete-user-with-clerk",
-    triggers: {
-      event: "clerk/user.deleted",
+    {
+        id: "delete-user-with-clerk",
+
+        triggers: {
+            event: "clerk/user.deleted",
+        },
     },
-  },
-  async ({ event }) => {
-    const { id } = event.data;
 
-    await connectDB();
+    async ({ event }) => {
+        const { id } = event.data;
 
-    await User.findByIdAndDelete(id);
+        await connectDB();
 
-    return {
-      success: true,
-      message: "User deleted successfully",
-    };
-  }
+        await User.findByIdAndDelete(id);
+
+        console.log(
+            "USER DELETED SUCCESSFULLY:",
+            id
+        );
+
+        return {
+            success: true,
+            message: "User deleted successfully",
+        };
+    }
 );
 
 // ==========================================
-// CREATE USER ORDER
+// PROCESS CREATED ORDER
+// ==========================================
+//
+// IMPORTANT:
+// The order is already created by
+// /api/order/create.
+//
+// Therefore this Inngest function MUST NOT
+// create another Order document.
+//
+// It only processes the event in background.
 // ==========================================
 
-export const createUserOrder = inngest.createFunction(
-  {
-    id: "create-user-order",
+export const processUserOrder = inngest.createFunction(
+    {
+        id: "process-user-order",
 
-    triggers: {
-      event: "order/created",
+        triggers: {
+            event: "order/created",
+        },
     },
 
-    batchEvents: {
-      maxSize: 5,
-      timeout: "5s",
-    },
-  },
+    async ({ event }) => {
+        console.log("=================================");
+        console.log("ORDER CREATED EVENT");
+        console.log("=================================");
 
-  async ({ events }) => {
-    const orders = events.map((event) => {
-      return {
-        userId: event.data.userId,
-        items: event.data.items,
-        amounts: event.data.amount,
-        address: event.data.address,
-        date: event.data.date,
-      };
-    });
+        console.log("Order ID:", event.data.orderId);
+        console.log("User ID:", event.data.userId);
+        console.log("Amount:", event.data.amounts);
+        console.log("Address:", event.data.address);
+        console.log("Items:", event.data.items);
 
-    await connectDB();
+        console.log("=================================");
+        console.log("ORDER PROCESSED BY INNGEST");
+        console.log("=================================");
 
-    await Order.insertMany(orders);
-
-    return {
-      success: true,
-      processed: orders.length,
-    };
-  }
+        return {
+            success: true,
+            message: "Order processed successfully",
+            orderId: event.data.orderId,
+        };
+    }
 );
