@@ -9,60 +9,72 @@ import Loading from "@/components/Loading";
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const fetchSellerOrders = async () => {
-    // Temporary dummy order data
-    // Later we will replace this with your database/API
-    setOrders([
-      {
-        _id: "order-001",
-        items: [
-          {
-            product: {
-              name: "Groundnut Oil",
-            },
-            quantity: 2,
-          },
-        ],
-        address: {
-          fullName: "Customer Name",
-          area: "Pune",
-          city: "Pune",
-          state: "Maharashtra",
-          phoneNumber: "9876543210",
-        },
-        amount: 680,
-        date: new Date().toISOString(),
-      },
-      {
-        _id: "order-002",
-        items: [
-          {
-            product: {
-              name: "Coconut Oil",
-            },
-            quantity: 1,
-          },
-          {
-            product: {
-              name: "Mustard Oil",
-            },
-            quantity: 2,
-          },
-        ],
-        address: {
-          fullName: "Customer Name",
-          area: "Hadapsar",
-          city: "Pune",
-          state: "Maharashtra",
-          phoneNumber: "9876543210",
-        },
-        amount: 920,
-        date: new Date().toISOString(),
-      },
-    ]);
+    try {
+      setLoading(true);
+      setError("");
 
-    setLoading(false);
+      const response = await fetch("/api/order/seller-orders", {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
+
+      // Read response as text first.
+      // This prevents "Unexpected end of JSON input"
+      // if the API returns an empty/non-JSON response.
+      const responseText = await response.text();
+
+      console.log("Seller Orders Status:", response.status);
+      console.log("Seller Orders Raw Response:", responseText);
+
+      if (!responseText) {
+        throw new Error(
+          `Server returned an empty response. Status: ${response.status}`
+        );
+      }
+
+      let data;
+
+      try {
+        data = JSON.parse(responseText);
+      } catch (jsonError) {
+        console.error(
+          "Seller Orders Invalid JSON:",
+          responseText
+        );
+
+        throw new Error(
+          `Server returned invalid JSON. Status: ${response.status}`
+        );
+      }
+
+      console.log("Seller Orders API Response:", data);
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Failed to fetch orders"
+        );
+      }
+
+      setOrders(data.orders || []);
+    } catch (error) {
+      console.error(
+        "Fetch Seller Orders Error:",
+        error
+      );
+
+      setError(
+        error?.message ||
+          "Something went wrong while fetching orders."
+      );
+
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -79,9 +91,16 @@ const Orders = () => {
             Orders
           </h2>
 
-          <div className="max-w-4xl rounded-md">
+          {/* Error */}
+          {error && (
+            <div className="p-4 rounded-md border border-red-200 bg-red-50 text-red-600">
+              {error}
+            </div>
+          )}
+
+          <div className="max-w-5xl rounded-md bg-white">
             {orders.length === 0 ? (
-              <div className="p-10 text-center border border-gray-200 rounded-md bg-white">
+              <div className="p-10 text-center border border-gray-200 rounded-md">
                 <p className="text-gray-500">
                   No orders found.
                 </p>
@@ -90,82 +109,132 @@ const Orders = () => {
               orders.map((order, index) => (
                 <div
                   key={order._id || index}
-                  className="flex flex-col md:flex-row gap-5 justify-between p-5 border-t border-gray-300"
+                  className="flex flex-col md:flex-row gap-6 justify-between p-5 border-t border-gray-300"
                 >
-                  {/* Order Products */}
-                  <div className="flex-1 flex gap-5 max-w-80">
-                    <div className="w-16 h-16 flex items-center justify-center bg-orange-50 rounded-md">
-                      <Package
-                        size={32}
-                        strokeWidth={1.5}
-                        className="text-orange-600"
-                      />
+                  {/* =========================
+                      PRODUCT DETAILS
+                  ========================== */}
+                  <div className="flex-1 flex gap-4 max-w-md">
+                    {/* Product Image */}
+                    <div className="w-16 h-16 min-w-16 flex items-center justify-center bg-orange-50 rounded-md overflow-hidden">
+                      {order.items?.[0]?.product?.image?.[0] ? (
+                        <Image
+                          src={
+                            order.items[0].product.image[0]
+                          }
+                          alt={
+                            order.items[0].product.name ||
+                            "Product"
+                          }
+                          width={64}
+                          height={64}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <Package
+                          size={32}
+                          strokeWidth={1.5}
+                          className="text-orange-600"
+                        />
+                      )}
                     </div>
 
-                    <p className="flex flex-col gap-3">
-                      <span className="font-medium">
-                        {order.items
-                          .map(
-                            (item) =>
-                              `${item.product.name} x ${item.quantity}`
+                    {/* Product Names */}
+                    <div className="flex flex-col gap-3">
+                      <div className="font-medium">
+                        {order.items?.map(
+                          (item, itemIndex) => (
+                            <div
+                              key={
+                                item._id || itemIndex
+                              }
+                            >
+                              {item.product?.name ||
+                                "Product"}{" "}
+                              x {item.quantity}
+                            </div>
                           )
+                        )}
+                      </div>
+
+                      <span>
+                        Items :{" "}
+                        {order.items?.length || 0}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* =========================
+                      CUSTOMER ADDRESS
+                  ========================== */}
+                  <div className="min-w-48">
+                    <p>
+                      <span className="font-medium">
+                        {order.address?.fullName ||
+                          "Customer"}
+                      </span>
+
+                      <br />
+
+                      <span>
+                        {order.address?.area || ""}
+                      </span>
+
+                      <br />
+
+                      <span>
+                        {[
+                          order.address?.city,
+                          order.address?.state,
+                        ]
+                          .filter(Boolean)
                           .join(", ")}
                       </span>
 
+                      <br />
+
                       <span>
-                        Items : {order.items.length}
+                        {order.address?.phoneNumber ||
+                          ""}
                       </span>
                     </p>
                   </div>
 
-                  {/* Customer Address */}
-                  <div>
-                    <p>
-                      <span className="font-medium">
-                        {order.address.fullName}
-                      </span>
-
-                      <br />
-
-                      <span>
-                        {order.address.area}
-                      </span>
-
-                      <br />
-
-                      <span>
-                        {`${order.address.city}, ${order.address.state}`}
-                      </span>
-
-                      <br />
-
-                      <span>
-                        {order.address.phoneNumber}
-                      </span>
-                    </p>
-                  </div>
-
-                  {/* Order Amount */}
-                  <p className="font-medium my-auto">
-                    ₹{order.amount}
+                  {/* =========================
+                      ORDER AMOUNT
+                  ========================== */}
+                  <p className="font-medium my-auto whitespace-nowrap">
+                    ₹{order.amounts || 0}
                   </p>
 
-                  {/* Order Details */}
-                  <div>
-                    <p className="flex flex-col">
+                  {/* =========================
+                      ORDER DETAILS
+                  ========================== */}
+                  <div className="min-w-40">
+                    <p className="flex flex-col gap-1">
                       <span>
                         Method : COD
                       </span>
 
                       <span>
                         Date :{" "}
-                        {new Date(
-                          order.date
-                        ).toLocaleDateString("en-IN")}
+                        {order.date
+                          ? new Date(
+                              order.date
+                            ).toLocaleDateString(
+                              "en-IN"
+                            )
+                          : "N/A"}
                       </span>
 
                       <span>
                         Payment : Pending
+                      </span>
+
+                      <span>
+                        Status :{" "}
+                        {order.status ||
+                          "Order Placed"}
                       </span>
                     </p>
                   </div>
